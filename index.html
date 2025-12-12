@@ -71,12 +71,15 @@
     <h1>Neurological Response Test</h1>
     <div class="subtitle">Protocol: Click the box immediately when it turns GREEN.</div>
 
-    <!-- MAIN INTERACTION AREA -->
     <div id="stimulus-box" onclick="handleClick()">
         <span id="stimulus-text">Press Start to Begin</span>
     </div>
 
     <button id="start-btn" onclick="startTest()">Start Test Sequence</button>
+    
+    <button id="export-btn" onclick="exportToCSV()" disabled style="margin-top: 10px; background-color: #28a745; color: white;">
+        Download Research Data (.CSV)
+    </button>
 
     <div id="results-area"></div>
 
@@ -101,6 +104,7 @@
             resultsArea.style.display = 'none';
             resultsArea.innerText = "";
             startBtn.disabled = true;
+            document.getElementById('export-btn').disabled = true; // Disable export on reset
             runTrial();
         }
 
@@ -136,7 +140,6 @@
                 // Handle False Starts (Clicking too early)
                 if (currentTrial > 0 && currentTrial <= NUM_TRIALS && startBtn.disabled) {
                     text.innerText = "FALSE START! Wait for Green.";
-                    // Optional: You could penalize the trial here
                 }
                 return;
             }
@@ -159,6 +162,11 @@
         function analyzeData() {
             startBtn.disabled = false;
             startBtn.innerText = "Restart Test";
+            
+            // --- UPDATE STATE: DATA AVAILABLE ---
+            // Enable the export button now that the array is full.
+            document.getElementById('export-btn').disabled = false; 
+
             text.innerText = "Test Complete";
             box.style.backgroundColor = "#A9A9A9";
 
@@ -182,6 +190,42 @@ Variability (σ):    ${stdev.toFixed(2)} ms
 INTERPRETATION:
 Low σ (<50ms) indicates consistent attention.
 High σ indicates cognitive fatigue or distraction.`;
+        }
+
+        /**
+         * FUNCTION: exportToCSV
+         * ---------------------
+         * PURPOSE: Converts the raw reaction time data into a Comma-Separated Values (CSV) file
+         * and triggers a browser download.
+         * * WHY THIS MATTERS: Allows for offline statistical analysis (ANOVA, T-Tests) 
+         * in external software like MATLAB, Python, or Excel.
+         */
+        function exportToCSV() {
+            
+            // --- STEP 1: DEFINE HEADERS ---
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Trial Number,Reaction Time (ms)\n"; // Header Row
+
+            // --- STEP 2: DATA ITERATION ---
+            reactionTimes.forEach(function(time, index) {
+                let row = `${index + 1},${time.toFixed(2)}`; 
+                csvContent += row + "\n";
+            });
+
+            // --- STEP 3: CREATE DOWNLOAD OBJECT ---
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            
+            // --- STEP 4: FILE NAMING CONVENTION ---
+            const date = new Date();
+            const filename = `Biomarker_Data_${date.toISOString().slice(0,10)}.csv`;
+            
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
