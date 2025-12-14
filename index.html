@@ -3,230 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biomarker Reaction Timer</title>
+    <title>Neurological Latency Tester</title>
+    
+    <script src="script.js" defer></script>
+    
     <style>
-        /* ENGINEERING NOTE: Clean, high-contrast UI to minimize visual distractions 
-           during the testing protocol. */
-        body {
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f0f2f5;
-            padding: 20px;
+        body { 
+            font-family: 'Courier New', monospace; 
+            text-align: center; 
+            background-color: #f4f4f4; 
+            margin-top: 50px;
         }
-
-        h1 { color: #333; margin-bottom: 5px; }
-        .subtitle { color: #666; margin-bottom: 20px; }
-
-        /* The Stimulus Area */
-        #stimulus-box {
-            width: 80%;
-            max-width: 500px;
-            height: 250px;
-            background-color: #A9A9A9; /* Neutral Gray (Wait State) */
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background-color 0.1s;
-            margin-bottom: 20px;
-            user-select: none; /* Prevents text highlighting on rapid clicks */
-        }
-
-        #stimulus-text {
+        #status-box { 
+            width: 300px; 
+            height: 300px; 
+            background-color: grey; 
+            margin: 30px auto; 
+            border-radius: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px; 
+            font-weight: bold; 
+            cursor: pointer; 
             color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-
-        /* Controls and Data Display */
-        button {
-            padding: 12px 24px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        button { 
+            padding: 15px 30px; 
+            font-size: 18px; 
+            cursor: pointer; 
+            background-color: #333; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
         }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        
-        #results-area {
-            margin-top: 20px;
-            white-space: pre-wrap; /* Keeps the formatting of the report */
-            font-family: 'Courier New', monospace;
-            background: white;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            display: none; /* Hidden until results exist */
+        button:hover {
+            background-color: #555;
         }
     </style>
 </head>
 <body>
 
-    <h1>Neurological Response Test</h1>
-    <div class="subtitle">Protocol: Click the box immediately when it turns GREEN.</div>
-
-    <div id="stimulus-box" onclick="handleClick()">
-        <span id="stimulus-text">Press Start to Begin</span>
-    </div>
-
-    <button id="start-btn" onclick="startTest()">Start Test Sequence</button>
+    <h1>Neurological Response Latency Tester</h1>
+    <p>System Calibration Tool v1.0</p>
     
-    <button id="export-btn" onclick="exportToCSV()" disabled style="margin-top: 10px; background-color: #28a745; color: white;">
-        Download Research Data (.CSV)
-    </button>
+    <button onclick="startReactionTest()">Initialize Test Sequence</button>
+    
+    <div id="status-box" onclick="recordReaction()">
+        System Idle
+    </div>
+    
+    <h2 id="result-display">Latency: -- ms</h2>
 
-    <div id="results-area"></div>
-
-    <script>
-        // --- ENGINEERING LOGIC & STATE VARIABLES ---
-        const NUM_TRIALS = 5;
-        let currentTrial = 0;
-        let reactionTimes = [];
-        let startTime = 0;
-        let waitingForInput = false;
-        let timeoutId = null;
-
-        const box = document.getElementById('stimulus-box');
-        const text = document.getElementById('stimulus-text');
-        const startBtn = document.getElementById('start-btn');
-        const resultsArea = document.getElementById('results-area');
-
-        function startTest() {
-            // Reset State
-            currentTrial = 0;
-            reactionTimes = [];
-            resultsArea.style.display = 'none';
-            resultsArea.innerText = "";
-            startBtn.disabled = true;
-            document.getElementById('export-btn').disabled = true; // Disable export on reset
-            runTrial();
-        }
-
-        function runTrial() {
-            if (currentTrial < NUM_TRIALS) {
-                currentTrial++;
-                text.innerText = `Trial ${currentTrial} of ${NUM_TRIALS}: Wait for Green...`;
-                box.style.backgroundColor = "#A9A9A9"; // Reset to Gray
-                waitingForInput = false;
-
-                // ENGINEERING NOTE: Variable Inter-Stimulus Interval (ISI)
-                // We use a random delay between 2000ms and 5000ms.
-                // This prevents the "rhythm effect" where patients anticipate the signal.
-                const delay = Math.floor(Math.random() * 3000) + 2000;
-
-                timeoutId = setTimeout(presentStimulus, delay);
-            } else {
-                analyzeData();
-            }
-        }
-
-        function presentStimulus() {
-            box.style.backgroundColor = "#00FF00"; // Bright Green (Go Signal)
-            text.innerText = "CLICK!";
-            
-            // Capture high-precision timestamp
-            startTime = performance.now();
-            waitingForInput = true;
-        }
-
-        function handleClick() {
-            if (!waitingForInput) {
-                // Handle False Starts (Clicking too early)
-                if (currentTrial > 0 && currentTrial <= NUM_TRIALS && startBtn.disabled) {
-                    text.innerText = "FALSE START! Wait for Green.";
-                }
-                return;
-            }
-
-            // Capture End Time
-            const endTime = performance.now();
-            waitingForInput = false;
-
-            // Calculate Delta (Reaction Time)
-            const reactionMs = endTime - startTime;
-            reactionTimes.push(reactionMs);
-
-            text.innerText = `Recorded: ${Math.floor(reactionMs)}ms`;
-            box.style.backgroundColor = "#A9A9A9"; // Reset
-
-            // Schedule next trial
-            setTimeout(runTrial, 1000);
-        }
-
-        function analyzeData() {
-            startBtn.disabled = false;
-            startBtn.innerText = "Restart Test";
-            
-            // --- UPDATE STATE: DATA AVAILABLE ---
-            // Enable the export button now that the array is full.
-            document.getElementById('export-btn').disabled = false; 
-
-            text.innerText = "Test Complete";
-            box.style.backgroundColor = "#A9A9A9";
-
-            // Statistical Analysis
-            const mean = reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length;
-            
-            // Calculate Standard Deviation (Variability)
-            // ENGINEERING NOTE: Standard Deviation is calculated to measure cognitive stability.
-            // High variability is a biomarker for attention deficit or fatigue.
-            const variance = reactionTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / reactionTimes.length;
-            const stdev = Math.sqrt(variance);
-
-            // Generate Report
-            resultsArea.style.display = 'block';
-            resultsArea.innerText = 
-`--- DIAGNOSTIC DATA REPORT ---
-Trials Completed: ${NUM_TRIALS}
-Mean Response Time: ${mean.toFixed(2)} ms
-Variability (σ):    ${stdev.toFixed(2)} ms
-
-INTERPRETATION:
-Low σ (<50ms) indicates consistent attention.
-High σ indicates cognitive fatigue or distraction.`;
-        }
-
-        /**
-         * FUNCTION: exportToCSV
-         * ---------------------
-         * PURPOSE: Converts the raw reaction time data into a Comma-Separated Values (CSV) file
-         * and triggers a browser download.
-         * * WHY THIS MATTERS: Allows for offline statistical analysis (ANOVA, T-Tests) 
-         * in external software like MATLAB, Python, or Excel.
-         */
-        function exportToCSV() {
-            
-            // --- STEP 1: DEFINE HEADERS ---
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Trial Number,Reaction Time (ms)\n"; // Header Row
-
-            // --- STEP 2: DATA ITERATION ---
-            reactionTimes.forEach(function(time, index) {
-                let row = `${index + 1},${time.toFixed(2)}`; 
-                csvContent += row + "\n";
-            });
-
-            // --- STEP 3: CREATE DOWNLOAD OBJECT ---
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            
-            // --- STEP 4: FILE NAMING CONVENTION ---
-            const date = new Date();
-            const filename = `Biomarker_Data_${date.toISOString().slice(0,10)}.csv`;
-            
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
 </body>
 </html>
