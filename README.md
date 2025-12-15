@@ -19,5 +19,10 @@ A high-precision, browser-based instrument designed to measure visual-motor reac
 * **Timing:** `Performance.now()` API
 * **Data Formatting:** CSV serialization via Blob objects
 
+## Data Validation
+Included in this repository:
+* `sample_data.csv`: A sample dataset captured from a live session.
+* `verify_data.py`: A Python script to parse the CSV and verify the statistical calculations (Mean/Sigma) externally.
+  
 ---
 *Engineered by Raul Montoya Cardenas | Electrical Engineering Undergrad | Texas State University*
