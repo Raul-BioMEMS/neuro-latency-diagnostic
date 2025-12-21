@@ -1,6 +1,11 @@
 import csv
 import statistics
 
+"""
+SCRIPT: Data Verification
+AUTHOR: Raul Montoya Cardenas
+"""
+
 # Configuration
 FILENAME = 'sample_data.csv'
 
@@ -28,6 +33,8 @@ def analyze_latency():
         
     except FileNotFoundError:
         print(f"Error: {FILENAME} not found.")
+    expect KeyError as e:
+        print(f"Error: Column not found in CSV. Cheack headers; {e}"
 
 if __name__ == "__main__":
     analyze_latency()
