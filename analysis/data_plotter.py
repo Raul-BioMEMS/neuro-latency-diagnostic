@@ -7,14 +7,12 @@ SCRIPT: Biomarker Data Analyzer
 PURPOSE: Reads raw reaction time logs (CSV), calculates diagnostic statistics,
 and visualizes variability (Sigma) to detect cognitive fatigue.
 
-AUTHOR: [Your Name]
+AUTHOR: Raul Montoya Cardenas
 DATE: 2025-12-12
 """
 
 # --- STEP 1: LOAD DATA ---
-# ENGINEERING NOTE: We use Pandas for robust data handling.
-# Ensure the CSV filename matches exactly what you downloaded.
-filename = "Biomarker_Data_2025-12-12.csv" 
+filename = "sample_data.csv" 
 df = pd.read_csv(filename)
 
 # --- STEP 2: STATISTICAL ANALYSIS ---
@@ -22,8 +20,6 @@ df = pd.read_csv(filename)
 mean_rt = df["Reaction Time (ms)"].mean()
 
 # Calculate Standard Deviation (Variability)
-# WHY THIS MATTERS: High variability (>50ms) is a stronger indicator 
-# of neurological dysfunction than simple slow reaction time.
 std_rt = df["Reaction Time (ms)"].std()
 
 print(f"--- DIAGNOSTIC REPORT ---")
