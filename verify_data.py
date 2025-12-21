@@ -18,7 +18,8 @@ def analyze_latency():
             print(f"--- Analyzing {FILENAME} ---")
             
             for row in reader:
-                val = float(row['Latency(ms)'])
+                # FIXED: Changed 'Latency(ms)' to matches your CSV header
+                val = float(row['Reaction Time (ms)'])
                 latencies.append(val)
                 print(f"Trial {row['Trial']}: {val} ms")
                 
